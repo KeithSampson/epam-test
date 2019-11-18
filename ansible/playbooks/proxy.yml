@@ -1,0 +1,5 @@
+#proxy.yml
+---
+- hosts: proxy
+  tasks:
+    - include: tasks/nginx.yml

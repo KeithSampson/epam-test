@@ -1,0 +1,55 @@
+#!groovy
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'master'
+        }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '5', artifactNumToKeepStr: '5'))
+        timestamps ()
+    }
+    parameters {
+        booleanParam(defaultValue: false, description: 'Install Nginx and upload scripts.', name: 'FORCE')
+    }
+
+    stages {
+        stage('Check Ansible playbook') {
+            steps {
+                script {
+                    env.CHECK_STATUS = sh (
+                        script: 'cd ~/ansible; ansible-playbook ./playbooks/proxy.yml --tags config-only --vault-password-file ../password.txt --syntax-check',
+                        returnStatus:true
+                    )
+                    if (env.CHECK_STATUS != '0') {
+                        autoCancelled = true
+                        error('Aborting the build because of Ansible playbook wrong.')
+                    }
+                }
+            }
+        }
+        stage('Update Nginx config files') {
+            steps {
+                script {
+                    if (params.FORCE == true) {
+                        echo "Force build"
+                        env.EXEC_STATUS = sh (
+                            script: 'cd ~/ansible; ansible-playbook ./playbooks/proxy.yml --vault-password-file ../password.txt',
+                            returnStatus:true
+                        )
+                    } else {
+                        echo "Configs only update"
+                        env.EXEC_STATUS = sh (
+                            script: 'cd ~/ansible; ansible-playbook ./playbooks/proxy.yml --tags config-only --vault-password-file ../password.txt',
+                            returnStatus:true
+                        )
+                    }
+                    if (env.EXEC_STATUS != '0') {
+                        autoCancelled = true
+                        error('Ansible playbook finished with errors.')
+                    }
+                }
+            }
+        }
+    }
+}

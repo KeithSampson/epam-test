@@ -1,0 +1,6 @@
+---
+
+- name: Install system utilties
+  apt:
+    package: ['vim', 'htop', 'sudo', 'net-tools', 'curl', 'git']
+    state: present

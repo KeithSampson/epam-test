@@ -1,0 +1,42 @@
+---
+
+- name: Install Nginx latest verion
+  apt:
+    name: nginx
+    state: latest
+    update_cache: yes
+  tags:
+    - config-only
+
+- name: Copy script for nginx reloading
+  template:
+    src: ./templates/nginx-reload.sh
+    dest: /root/nginx-reload.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Stop Nginx service
+  service:
+    name: nginx
+    state: stopped
+
+- name: Remove nginx folder
+  file:
+    path=/etc/nginx
+    state=absent
+
+- name: Pull from Git
+  git:
+    repo: "{{ NGINX_CONFIG_REPO }}"
+    dest: /etc/nginx
+    update: yes
+    force: yes
+    ssh_opts: "-o StrictHostKeyChecking=no"
+  tags:
+    - config-only
+
+- name: Check config and reload Nginx
+  shell: /root/nginx-reload.sh
+  tags:
+    - config-only

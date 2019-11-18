@@ -1,0 +1,11 @@
+---
+- name: VPS initialization
+  hosts: proxy
+  vars_files:
+    - ../group_vars/proxy
+
+  tasks:
+  - include: tasks/python.yml
+  - include: tasks/timezone.yml
+  - include: tasks/system_updates.yml
+  - include: tasks/system_utilities.yml

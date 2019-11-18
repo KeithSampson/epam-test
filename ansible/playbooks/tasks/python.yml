@@ -1,0 +1,4 @@
+---
+# Install Python on the server
+- name: Install Python 2
+  raw: test -e /usr/bin/python || (apt -y update && apt install -y python2.7 python-minimal)
